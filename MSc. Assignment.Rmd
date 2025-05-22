@@ -1,7 +1,8 @@
-# Libraries used in the assignment
 ```{r}
-install.packages("matlib")
-install.packages("rsample")
+options(repos = c(CRAN = "https://cran.r-project.org"))
+if (!require("matlib")) install.packages("matlib")
+
+if (!require("matlib")) install.packages("rsample")
 ```
 
 # Importing needed library
@@ -13,7 +14,7 @@ library(rsample)
 
 # Importing input data from a csv file
 ```{r}
-X=as.matrix(read.csv(file="C:/Users/Prabin's PC/OneDrive/MSc. Assignment/x.csv",header = F))
+X=as.matrix(read.csv(file="D:/College Files/Assignment/x.csv",header = F))
 head(X)
 colnames(X)<-c("x1","x3","x4","x5")
 ```
@@ -24,7 +25,7 @@ head(X)
 ```
 # Importing targeted data
 ```{r}
-Y=as.matrix(read.csv(file="C:/Users/Prabin's PC/OneDrive/MSc. Assignment/y.csv",header = F))
+Y=as.matrix(read.csv(file="D:/College Files/Assignment/y.csv",header = F))
 colnames(Y)<-c("y")
 ```
 
@@ -35,7 +36,7 @@ head(Y)
 
 # Importing time series data data 
 ```{r}
-time = read.csv("C:/Users/Prabin's PC/OneDrive/MSc. Assignment/t.csv", header = F)
+time = read.csv("D:/College Files/Assignment/t.csv", header = F)
 time = as.matrix(time)
 ```
 
@@ -130,16 +131,16 @@ rug(jitter(Y[,"y"]))
 par(mfrow=c(2,2))
 
 # Plotting input signal Temperature against output signal Y
-plot(X[,"x1"],Y,main = "Correlation betweeen Temperature and Y signal", xlab = "X1 signal", ylab = "Output signal y", col="#1B8DE4")
+plot(X[,"x1"],Y,main = "Correlation betweeen Temperature and Y signal", xlab = "Temperature signal", ylab = "Output signal y", col="#1B8DE4")
 
 # Plotting input signal Ambient Pressure against output signal Y
 plot(X[,"x3"],Y,main = "Correlation betweeen Ambient Pressure and Y signal", xlab = "X3 signal", ylab = "Output signal y", col="#e4721b")
 
 # Plotting input signal Relative Humidity against output signal Y
-plot(X[,"x4"],Y,main = "Correlation betweeen Relative Humidity and Y signal", xlab = "X4 signal", ylab = "Output signal y", col="#1B8DE4")
+plot(X[,"x4"],Y,main = "Correlation betweeen X4 and Y signal", xlab = "X4 signal", ylab = "Output signal y", col="#1B8DE4")
 
 # Plotting input signal X5 against output signal Y
-plot(X[,"x5"],Y,main = "Correlation betweeen Exhaust Vaccuum and Y signal", xlab = "X5 signal", ylab = "Output signal y", col="#e4721b")
+plot(X[,"x5"],Y,main = "Correlation betweeen X5 and Y signal", xlab = "X5 signal", ylab = "Output signal y", col="#e4721b")
 
 ```
 # Task 2
@@ -458,105 +459,161 @@ qqline(model5_error, col = "#1B8DE4")
 # Task 2.7 splitting data into training and testing dataset and calculating estamation based on training dataset
 #also plotting normal distribution graph of training data
 ```{r}
-## Spliting the dataset y into  Traning and testing data set.
-split_Y<-initial_split(data = as.data.frame(Y),prop=.7)
-## Traning splitted Y dataset 
-Y_training_set<-training(split_Y)
-Y_testing_set<-as.matrix(testing(split_Y))
-## Testing splitted Y dataset 
-Y_training_data<-as.matrix(Y_training_set)
 
-## Spliting the dataset of X into  Traning and testing data set.
-split_X<-initial_split(data = as.data.frame(X),prop=.7)
-## Traning splitted X dataset
-X_training_set<-training(split_X)
-## Testing splitted X dataset 
-X_testing_set<-as.matrix(testing(split_X))
-X_testing_data<-as.matrix(X_testing_set)
-X_training_data<-as.matrix(X_training_set)
+# Load required library (if not already loaded)
+library(rsample)
 
-### Estimating model parameters using Traning set
-traning_ones=matrix(1 , length(X_training_set$x1),1)
-# selected model 5 and using equation of model 5
-X_traning_model<-cbind(traning_ones,X_training_set[,"x4"],(X_training_set[,"x1"])^2,(X_training_set[,"x3"])^2)
-traning_thetahat=Ginv(t(X_traning_model) %*% X_traning_model) %*% t(X_traning_model) %*%  Y_training_data
-  
-### Model out/Prediction
-Y_testing_hat = X_testing_data %*% traning_thetahat
-head(Y_testing_hat)
-RSS_testing=sum((Y_testing_set-Y_testing_hat)^2)
-head(RSS_testing)
-t.test(Y_training_data, mu=500, alternative="two.sided", conf.level=0.95)
-C_I1=454.0137
-C_I2=454.8377
-p2 <- plot(density(Y_training_data), col="#1B8DE4", lwd=2,
-           main="Distribution of Traning Data")
-abline(v=C_I1,col="#e4721b", lty=2)
-abline(v=C_I2,col="#e4721b", lty=2)
+# Splitting the dataset Y into Training and Testing dataset
+split_Y <- initial_split(data = as.data.frame(Y), prop = 0.7)
+Y_training_set <- training(split_Y)
+Y_testing_set <- as.matrix(testing(split_Y))
+Y_training_data <- as.matrix(Y_training_set)
 
-thetaHat_training =solve(t(X_training_data) %*% X_training_data) %*% t(X_training_data) %*%Y_training_data
-head(thetaHat_training)
-length(thetaHat_training)
-dis_test=density(Y_training_data)
-plot(dis_test,main = "Density plot of Y Signal",col="#1B8DE4")
+# Splitting the dataset X into Training and Testing dataset
+split_X <- initial_split(data = as.data.frame(X), prop = 0.7)
+X_training_set <- training(split_X)
+X_testing_set <- as.matrix(testing(split_X))
+X_testing_data <- as.matrix(X_testing_set)
+X_training_data <- as.matrix(X_training_set)
 
-### Calculating Confidential interval
- z=1.96 ##(95%) Confidential interval
- error=((Y_testing_set-Y_testing_hat))
- n_len=length(Y_testing_hat)
- C_I_1= z * sqrt( (error * (1-error) ) / n_len)
- head(C_I_1)
- head(error)
- C_I_2= z * sqrt( (error * (1+error)) / n_len)
- head(C_I_2)        
+# Estimating model parameters using Training set
+training_ones <- matrix(1, nrow = length(X_training_set$x1), ncol = 1)
+# Selected model 5: Y = beta_0 + beta_1*x4 + beta_2*x1^2 + beta_3*x3^2
+X_training_model <- cbind(training_ones, X_training_set[,"x4"], (X_training_set[,"x1"])^2, (X_training_set[,"x3"])^2)
+training_thetahat <- solve(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*% Y_training_data
 
-Variance_model = mean((Y_testing_set - Y_testing_hat)^2)
-se = sqrt(Variance_model)
-CI_lower = Y_testing_hat - z * se
-CI_upper = Y_testing_hat + z * se
-head(CI_lower)
-head(CI_upper)
+# Model predictions on testing data
+X_testing_model <- cbind(matrix(1, nrow = nrow(X_testing_set), ncol = 1), X_testing_set[,"x4"], (X_testing_set[,"x1"])^2, (X_testing_set[,"x3"])^2)
+Y_testing_hat <- X_testing_model %*% training_thetahat
+
+# Compute Residual Sum of Squares (RSS)
+RSS_testing <- sum((Y_testing_set - Y_testing_hat)^2)
+
+t.test(X_training_model, mu = 500, alternative = "two.sided", conf.level = 0.95)
+
+# Calculate 95% Confidence Intervals
+z <- 1.96  # z-score for 95% confidence level
+mse <- mean((Y_testing_set - Y_testing_hat)^2)  # Mean Squared Error
+se <- sqrt(mse)  # Standard error (simplified)
+
+CI_lower <- Y_testing_hat - z * se
+CI_upper <- Y_testing_hat + z * se
+
+
+
+# Calculate residuals (errors)
+errors <- Y_testing_set - Y_testing_hat
+
+# Plot the distribution of errors
+error_density <- density(errors)
+plot(error_density,
+     main = "Distribution of Prediction Errors",
+     xlab = "Error (Y_actual - Y_predicted)",
+     col = "#FF5733",
+     lwd = 2)
+abline(v = 0, col = "black", lty = 2)  # Add a vertical line at 0
+
+# Calculate mean and standard deviation of training data
+mean_Y <- mean(Y_training_data)
+sd_Y <- sd(Y_training_data)
+
+# Define range around the mean (e.g., mean ± 1 standard deviation)
+range_lower <- mean_Y - sd_Y
+range_upper <- mean_Y + sd_Y
+
+# Plot the density of training data
+plot(density(Y_training_data), col = "#1B8DE4", lwd = 2,
+     main = "Distribution of Training Data", xlab = "Y Value")
+
+# Add vertical line at the mean
+abline(v = mean_Y, col = "darkgreen", lwd = 2, lty = 1)
+
+# Add lines at one standard deviation below and above the mean
+abline(v = range_lower, col = "#e4721b", lty = 2)
+abline(v = range_upper, col = "#e4721b", lty = 2)
+
+# Optional: Add legend
+legend("topright", legend = c("Mean", "±1 SD Range"),
+       col = c("darkgreen", "#e4721b"), lty = c(1, 2), lwd = 2, bty = "n")
+
+
+# Create index for plotting
+index <- 1:length(Y_testing_hat)
+
+# Plot predicted values
+plot(index, Y_testing_hat, type = "l", col = "#1B8DE4", lwd = 2,
+     ylim = range(c(CI_lower, CI_upper, Y_testing_set)),
+     ylab = "Y Value", xlab = "Observation Index",
+     main = "Predicted Values with 95% Confidence Intervals")
+
+# Add actual Y values as points
+points(index, Y_testing_set, col = "black", pch = 16)
+
+# Add confidence interval lines
+lines(index, CI_lower, col = "#e4721b", lty = 2)
+lines(index, CI_upper, col = "#e4721b", lty = 2)
+
+# Add legend
+legend("topright", legend = c("Predicted", "Actual", "95% CI"),
+       col = c("#1B8DE4", "black", "#e4721b"),
+       lty = c(1, NA, 2), pch = c(NA, 16, NA), bty = "n")
+
+cat("Mean Square Error:", mse, "\n")
+cat("R squared:", se, "\n")
+
+# Output some results
+cat("Estimated Parameters:\n")
+print(training_thetahat)
+cat("RSS on Test Data:", RSS_testing, "\n")
+cat("First 5 Predictions:\n")
+print(head(Y_testing_hat))
+cat("First 5 CI Lower:\n")
+print(head(CI_lower))
+cat("First 5 CI Upper:\n")
+print(head(CI_upper))
 ```
 
 # Task 3
 ```{r}
 ## Model 5 will be used, parameter are selected and kept constant.
-arr_1=0
-arr_2=0
-f_value=0
-s_value=0
-Model5_thetahat
+set.seed(133)
+
+arr_1=c()
+arr_2=c()
+rejected_val1=c()
+rejected_val2=c()
+
+f_value=arr_1
+s_value=arr_2
 #values from thetahat
-thetebias <- 251.671653135 #selected parameter
+thetabias <- 251.671653135 #selected parameter
 thetaone <- 0.227168908 # selected parameter
 thetatwo <- -0.036521863 # constant value
 thetathree <- -0.003650664 # constant value
 
  Epison <- RSS_Model_5 * 2 ## fixing value of eplision
-num <- 100 #number of iteration
+num <- 800 #number of iteration
 ##Calculating Y-hat for performing rejection ABC
 counter <- 0
 for (i in 1:num) {
-  range1 <- runif(1, thetebias * 0.8, thetebias * 1.2)
+  range1 <- runif(1, thetabias * 0.8, thetabias * 1.2)
   range2 <- runif(1, thetaone * 0.8, thetaone * 1.2)
   New_thetahat <- matrix(c(range1,range2,thetatwo,thetathree))
   New_Y_Hat <- X_model5 %*% New_thetahat ## calculating new Y-hat
   new_RSS <- sum((Y-New_Y_Hat)^2)
   new_RSS
-  if (new_RSS > Epison){
+  if (new_RSS < Epison){
     arr_1[i] <- range1
     arr_2[i] <- range2
     counter = counter+1
     f_value <- matrix(arr_1)
     s_value <- matrix(arr_2)
   }
+  else {
+    rejected_val1 <- c(rejected_val1,range1)
+    rejected_val2 <- c(rejected_val2,range2)
+  }
 }
-hist(f_value, col = "#e4721b")
-hist(s_value, col = "#1B8DE4")
-
-
-```
-```{r}
 # 1. Acceptance Rate
 acceptance_rate <- counter / num
 cat("Acceptance Rate:", acceptance_rate, "\n")
@@ -581,20 +638,26 @@ if (nrow(accepted_params) > 0) {
   print(summary(accepted_params$range2))
 }
 
+```
+
+
+
+```{r}
+
 # 4. Visualizations
 # Scatter plot of accepted range1 vs. range2
 if (nrow(accepted_params) > 0) {
-  plot(accepted_params$range1, accepted_params$range2,
+  plot(rejected_val1, rejected_val2,
        xlab = "range1 (Intercept)", ylab = "range2 (x4_scaled)",
-       main = "Accepted Parameters", pch = 19, col = "#e4721b")
-  abline(v = thetebias, h = thetaone, col = "#1B8DE4", lty = 2)  # Original values
+       main = "Rejected Parameters", pch = 19, col = "#e4721b")
+  abline(v = thetabias, h = thetaone, col = "#1B8DE4", lty = 2)  # Original values
 }
 
 # Histograms
 if (nrow(accepted_params) > 0) {
   par(mfrow = c(1, 2))
   hist(accepted_params$range1, main = "Histogram of range1", xlab = "range1", col = "#e4721b")
-  abline(v = thetebias, col = "#1B8DE4", lty = 2)
+  abline(v = thetabias, col = "#1B8DE4", lty = 2)
   hist(accepted_params$range2, main = "Histogram of range2", xlab = "range2", col = "#e4721b")
   abline(v = thetaone, col = "#1B8DE4", lty = 2)
   par(mfrow = c(1, 1))
@@ -604,7 +667,7 @@ if (nrow(accepted_params) > 0) {
 
 ```{r}
 ### Ploting Joint and Marginal Posterior Distribution of the graph
-plot(f_value,s_value, col = c("#1B8DE4", "#e4721b"), main = "Joint and Marginal Posterior Distribution")
+plot(f_value,s_value, col = c("#1B8DE4", "#e4721b"), main = "Joint and Marginal Posterior Distribution (Acceptance)")
 par(mfrow=c(1,1))
 ```
 
